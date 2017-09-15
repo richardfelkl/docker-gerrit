@@ -38,7 +38,7 @@ if [ "$1" = "/gerrit-start.sh" ]; then
 
   # Install MySQL
   [ ! -d ${GERRIT_SITE}/lib ] && mkdir ${GERRIT_SITE}/lib && chown -R ${GERRIT_USER} "${GERRIT_SITE}/lib"
-  cp -f ${GERRIT_HOME}/mysql-connector-java-5.1.21.jar ${GERRIT_SITE}/lib/mysql-connector-java-5.1.21.jar
+  cp -f ${GERRIT_HOME}/mysql-connector-java-${MYSQL_CONNECTOR_VERSION}.jar ${GERRIT_SITE}/lib/mysql-connector-java-${MYSQL_CONNECTOR_VERSION}.jar
 
 
   # Provide a way to customise this image
