@@ -1,4 +1,4 @@
-FROM java:openjdk-8-jre-alpine
+FROM openjdk:8-jre-alpine
 
 MAINTAINER zsx <thinkernel@gmail.com>
 
@@ -6,7 +6,7 @@ MAINTAINER zsx <thinkernel@gmail.com>
 ENV GERRIT_HOME /var/gerrit
 ENV GERRIT_SITE ${GERRIT_HOME}/review_site
 ENV GERRIT_WAR ${GERRIT_HOME}/gerrit.war
-ENV GERRIT_VERSION 2.12.3
+ENV GERRIT_VERSION 2.13.6
 ENV GERRIT_USER gerrit2
 ENV GERRIT_INIT_ARGS ""
 
@@ -14,7 +14,7 @@ ENV GERRIT_INIT_ARGS ""
 RUN adduser -D -h "${GERRIT_HOME}" -g "Gerrit User" -s /sbin/nologin "${GERRIT_USER}"
 
 RUN set -x \
-    && apk add --update --no-cache git openssh openssl bash perl perl-cgi git-gitweb
+    && apk add --update --no-cache git openssh openssl bash perl perl-cgi git-gitweb mysql-client
 
 # Grab gosu for easy step-down from root
 ENV GOSU_VERSION 1.9
@@ -35,13 +35,12 @@ RUN set -x \
 RUN mkdir /docker-entrypoint-init.d
 
 #Download gerrit.war TEMPORARY URL for fix with iframe
-#RUN wget https://gerrit-releases.storage.googleapis.com/gerrit-${GERRIT_VERSION}.war -O $GERRIT_WAR
-RUN wget https://gerrit-ci.gerritforge.com/job/Gerrit-stable-2.13/20/artifact/buck-out/gen/gerrit.war -O $GERRIT_WAR
+RUN wget https://www.gerritcodereview.com/download/gerrit-${GERRIT_VERSION}.war -O $GERRIT_WAR
 #Only for local test
 #COPY gerrit-${GERRIT_VERSION}.war $GERRIT_WAR
 
 #Download Plugins
-ENV PLUGIN_VERSION=stable-2.12
+ENV PLUGIN_VERSION=stable-2.13
 ENV GERRITFORGE_URL=https://gerrit-ci.gerritforge.com
 ENV GERRITFORGE_ARTIFACT_DIR=lastSuccessfulBuild/artifact/buck-out/gen/plugins
 #delete-project
@@ -52,16 +51,16 @@ RUN wget \
 #events-log
 #This plugin is required by gerrit-trigger plugin of Jenkins.
 RUN wget \
-    ${GERRITFORGE_URL}/job/plugin-events-log-${PLUGIN_VERSION}/${GERRITFORGE_ARTIFACT_DIR}/events-log/events-log.jar \
+    ${GERRITFORGE_URL}/job/plugin-events-log-stable-2.12/${GERRITFORGE_ARTIFACT_DIR}/events-log/events-log.jar \
     -O ${GERRIT_HOME}/events-log.jar
 
 #oauth2 plugin
 RUN wget \
-    ${GERRITFORGE_URL}/job/plugin-gerrit-oauth-provider-gh-master/${GERRITFORGE_ARTIFACT_DIR}/gerrit-oauth-provider/gerrit-oauth-provider.jar \
+    ${GERRITFORGE_URL}/job/plugin-oauth-${PLUGIN_VERSION}/${GERRITFORGE_ARTIFACT_DIR}/oauth/oauth.jar \
     -O ${GERRIT_HOME}/gerrit-oauth-provider.jar
 
 #download bouncy castle
-ENV BOUNCY_CASTLE_VERSION 1.54
+ENV BOUNCY_CASTLE_VERSION 1.52
 ENV BOUNCY_CASTLE_URL http://central.maven.org/maven2/org/bouncycastle
 
 RUN wget \
@@ -71,6 +70,10 @@ RUN wget \
 RUN wget \
     ${BOUNCY_CASTLE_URL}/bcpkix-jdk15on/${BOUNCY_CASTLE_VERSION}/bcpkix-jdk15on-${BOUNCY_CASTLE_VERSION}.jar \
     -O ${GERRIT_HOME}/bcpkix-jdk15on-${BOUNCY_CASTLE_VERSION}.jar
+
+RUN wget \
+    https://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.21/mysql-connector-java-5.1.21.jar  \
+    -O ${GERRIT_HOME}/mysql-connector-java-5.1.21.jar
 
 # Ensure the entrypoint scripts are in a fixed location
 COPY gerrit-entrypoint.sh /
@@ -87,6 +90,8 @@ VOLUME $GERRIT_SITE
 
 #Copy custom gerrit theme css
 COPY GerritSite.css /tmp/
+RUN wget http://10.1.0.14:8078/gerrit/mirantis-logo.png -O /tmp/mirantis-logo.png
+RUN wget http://10.1.0.14:8078/gerrit/universe.jpg -O /tmp/universe.jpg
 
 ENTRYPOINT ["/gerrit-entrypoint.sh"]
 

@@ -152,7 +152,7 @@ div.gerrit-state-minus-two:before {
 #gerrit_topmenu {
   border-bottom: 1px solid #909090;
   padding: 8px 0;
-  background: url("http://185.22.97.168/img/mirantis_logo.png"), url("http://185.22.97.168/img/horizon-universe.jpg");
+  background: url("./mirantis_logo.png"), url("./universe.jpg");
   background-repeat: no-repeat;
   background-position: 26px 8px, -1px -0px;
   background-size: 91px 55px, 100% 65px;
